@@ -2,10 +2,9 @@
 #include <stdlib.h>
 #include <time.h>
 
-//Создание случайного массива
-void GenerateKey(int key[], const int size) {
 
-    srand(time(NULL));
+//Заполнение массива случайными неповторяющимися числами
+void GenerateKey( int array[], const int size) {
 
     int mass[10] = { 0,1,2,3,4,5,6,7,8,9 };
 
@@ -17,38 +16,38 @@ void GenerateKey(int key[], const int size) {
     }
     
     for (int i = 0; i <= size - 1; i++) {
-         key[i] = mass[i];
+         array[i] = mass[i];
     }
 }
-//Проверка ответа
-int Guess(int* key,int* anwser) {
-    int correctly = 0;
-    int closely = 0;
-    
-    for (int i = 0; i <= 3; i++) {
-        if (key[i] == anwser[i])
+
+//Сравнение массивов одинаковой длины
+//Проверка на однозначное соответствие массива array_2 массиву array_1
+//Подсчет количества сооствествующих элементов и элементов для которых нашлось соответсвие,но он имеет неправильную позицию
+void ComparingArrays(int* array_1,int* array_2,int &correctly, int &closely, int size = 4) {
+    for (int i = 0; i <= size-1; i++) {
+        if (array_1[i] == array_2[i])
             correctly += 1;
+
         else{
-            for (int j = 0; j <= 3; j++) {
-                if (key[i] == anwser[j])
+            for (int j = 0; j <= size - 1; j++) {
+                if (array_1[i] == array_2[j])
                     closely += 1;
             }
         }
     }
-    std::cout << "correctly = " << correctly << "; ";
-    std::cout << "closely = " << closely << "." << std::endl;
-
-    return correctly;
 }
-//Ввод ответа
-void InputDigits(int* array) {
-    int number;
 
-    std::cout << "Enter 4 digits: ";
+//Ввод числа в массив,с указанием желаемого количества символов в числе
+//По одному знаку,в каждый элемент массива
+int InputDigits(int* array,int quantity_of_digits = 4) {
+    int quantity = pow(10, (quantity_of_digits - 1));
+
+    int number;
     std::cin >> number;
 
-    if (number < 999 || number > 10000)
-        std::cout << "Wrong number!!! " << std::endl;
+    if (number <= (quantity-1) || number >= quantity*10)
+        return 0;
+
     else {
         for (int i = 3; i>=0; i--) {
             array[i] = number % 10;
@@ -56,29 +55,50 @@ void InputDigits(int* array) {
         }
     }
 
-
+    return 1;
 }
-//Вывод массива на экран
+
+//Вывод массива в консоль
 void OutputArray(int* array, const int size) {
     std::cout << "Array: ";
     for (int i = 0; i < size; i++)
         std::cout << array[i] << ' ';
+
+    std::cout << std::endl;
 }
 
 int main()
 {   
     const int lenght = 4;
-    int key[lenght];
-    int anwser[lenght];
-    int correctly = 0;
+    int decisions[lenght];
+    int anwsers[lenght];
+    int correct = 0;
 
-    GenerateKey(key, lenght);
+    srand(time(NULL));
+    GenerateKey(decisions, lenght);
 
-    while (correctly != 4) {
-        InputDigits(anwser);
-        Guess(key, anwser);
+    while (correct != 4) {
+        int close = 0; 
+        correct = 0;
+
+        std::cout << "Enter 4 digits: ";
+        if (InputDigits(anwsers)) {
+            ComparingArrays(decisions, anwsers,correct,close);
+
+            std::cout << "correctly = " << correct << "; ";
+            std::cout << "closely = " << close << "." << std::endl;
+        }
+            
+
+        else{
+            std::cout << "Wrong number!!!" << std::endl;
+                continue;
+        }
     }
 
+    OutputArray(decisions, lenght);
+
+    
     std::cout << "UrA!";
 }
 
