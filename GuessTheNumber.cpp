@@ -19,10 +19,12 @@ void RandomFilling( int* array,int* alphabet,int alphabet_size, int array_size =
 }
 
 //Заполнение массива случайными числами
-void RandomDigits(int* array, int array_size = 10) {
-    array[0] = rand() % 10;
+void RandomDigits(int* array, int array_size = 10, int quantity_of_digits = 1) {
+    int quantity = pow(10, (quantity_of_digits));
+    array[0] = rand() % quantity;
+
     for (int i = 1; i < array_size; i++) {
-        array[i] = rand() % 10;
+        array[i] = rand() % quantity;
         for (int j = 0; j < i; j++) {
             if (array[j] == array[i]) {
                 i--;
