@@ -4,7 +4,7 @@
 
 
 //Заполнение массива числами из заданного мн-ва чисел,в случайно порядке
-void RandomFilling( int* array,int* alphabet,int alphabet_size, int array_size = 10) {
+void RandomFilling( int* array,int* alphabet, int array_size, int alphabet_size = 10) {
 
     for (int i = alphabet_size - 1; i >= 1; i--) {
         int j = rand() % (i + 1);
@@ -20,7 +20,7 @@ void RandomFilling( int* array,int* alphabet,int alphabet_size, int array_size =
 
 //Заполнение массива случайными числами
 void RandomDigits(int* array, int array_size = 10, int quantity_of_digits = 1) {
-    int quantity = pow(10, (quantity_of_digits));
+    int quantity = static_cast<int>(pow(10, (quantity_of_digits)));
     array[0] = rand() % quantity;
 
     for (int i = 1; i < array_size; i++) {
@@ -56,7 +56,7 @@ void ComparingArrays(int* array_1,int* array_2,int &correctly, int &closely,int 
 //Заполнение по одному знаку,в один элемент массива
 //Если количество символов в числе не соответсвует заданному,возвращение 0
 int InputDigits(int* array,int quantity_of_digits = 4) {
-    int quantity = pow(10, (quantity_of_digits - 1));
+    int quantity = static_cast<int>(pow(10, (quantity_of_digits - 1)));
 
     int number;
     std::cin >> number;
@@ -96,7 +96,7 @@ int main()
 
 
     srand(time(NULL));
-    RandomFilling(decisions,alphabet,lenght_alphabet,lenght);
+    RandomFilling(decisions,alphabet,lenght, lenght_alphabet);
 
     while (correct != 4) {
         int close = 0; 
