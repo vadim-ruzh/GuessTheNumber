@@ -40,7 +40,7 @@ void RandomDigits(int* array, int array_size = 10, int quantity_of_digits = 1) {
 //Сравнение массивов одинаковой длины
 //Проверка на однозначное соответствие массива array_2 массиву array_1
 //Подсчет количества сооствествующих элементов и элементов для которых нашлось соответсвие,но он имеет неправильную позицию
-void ComparingArrays(int* array_1,int* array_2,int &correctly, int &closely,int  array_size = 4) {
+void ComparingArrays(int* array_1,int* array_2,short int &correctly, short int &closely,int  array_size = 4) {
     for (int i = 0; i <= array_size - 1; i++) {
         if (array_1[i] == array_2[i])
             correctly += 1;
@@ -103,19 +103,19 @@ int main()
     const int lenght_alphabet = 10;
     int alphabet[lenght_alphabet] = { 0,1,2,3,4,5,6,7,8,9 };
 
-    int play = 1;
+    short int play = 1;
 
     srand(time(NULL));
     RandomFilling(decisions,alphabet,lenght, lenght_alphabet);
 
     while (play) {
-        int correct = 0;
-        int attempts = 10;
+        short int correct = 0;
+        short int attempts = 10;
 
-        std::cout << "\nYou have to guess the number of 4 non - repeating digits\n" << std::endl;
+        std::cout << "You have to guess the number of 4 non - repeating digits\n" << std::endl;
 
         while (correct != 4 && attempts > 0) {
-            int close = 0;
+            short int close = 0;
             correct = 0;
 
             std::cout << "Enter 4 digits: ";
