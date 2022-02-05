@@ -1,6 +1,7 @@
 ﻿#include <iostream>
 #include <stdlib.h>
 #include <time.h>
+#include <string>
 
 
 //Заполнение массива числами из заданного мн-ва чисел,в случайно порядке
@@ -20,7 +21,7 @@ void RandomFilling( int* array,int* alphabet, int array_size, int alphabet_size 
 
 //Заполнение массива случайными числами
 void RandomDigits(int* array, int array_size = 10, int quantity_of_digits = 1) {
-    int quantity = static_cast<int>(pow(10, (quantity_of_digits)));
+    int quantity = (int)(pow(10, (quantity_of_digits)));
     array[0] = rand() % quantity;
 
     for (int i = 1; i < array_size; i++) {
@@ -33,6 +34,7 @@ void RandomDigits(int* array, int array_size = 10, int quantity_of_digits = 1) {
         }
 
     }
+
 }
 
 //Сравнение массивов одинаковой длины
@@ -45,8 +47,10 @@ void ComparingArrays(int* array_1,int* array_2,int &correctly, int &closely,int 
 
         else{
             for (int j = 0; j <= array_size - 1; j++) {
-                if (array_1[i] == array_2[j])
+                if (array_1[i] == array_2[j]){
                     closely += 1;
+                }
+
             }
         }
     }
@@ -56,22 +60,29 @@ void ComparingArrays(int* array_1,int* array_2,int &correctly, int &closely,int 
 //Заполнение по одному знаку,в один элемент массива
 //Если количество символов в числе не соответсвует заданному,возвращение 0
 int InputDigits(int* array,int quantity_of_digits = 4) {
-    int quantity = static_cast<int>(pow(10, (quantity_of_digits - 1)));
 
-    int number;
-    std::cin >> number;
+    std::string str;
+    std::cin >> str;
+    
+    if(str.length() == quantity_of_digits){
+        int number;
 
-    if (number <= (quantity-1) || number >= quantity*10)
-        return 0;
+        try {
+            number = std::stoi(str);
+        }
+        catch (std::invalid_argument) {
+            return 0;
+        }
 
-    else {
-        for (int i = 3; i>=0; i--) {
+        for (int i = quantity_of_digits-1; i>=0; i--) {
             array[i] = number % 10;
             number = number / 10;
         }
+        return 1;
     }
 
-    return 1;
+    else
+        return 0;
 }
 
 //Вывод массива в консоль
@@ -84,7 +95,7 @@ void OutputArray(int* array,int array_size) {
 }
 
 int main()
-{   
+{  
     const int lenght = 4;
     int decisions[lenght];
     int anwsers[lenght];
@@ -92,34 +103,50 @@ int main()
     const int lenght_alphabet = 10;
     int alphabet[lenght_alphabet] = { 0,1,2,3,4,5,6,7,8,9 };
 
-    int correct = 0;
-
+    int play = 1;
 
     srand(time(NULL));
     RandomFilling(decisions,alphabet,lenght, lenght_alphabet);
 
-    while (correct != 4) {
-        int close = 0; 
-        correct = 0;
+    while (play) {
+        int correct = 0;
+        int attempts = 10;
 
-        std::cout << "Enter 4 digits: ";
-        if (InputDigits(anwsers)) {
-            ComparingArrays(decisions, anwsers,correct,close);
+        std::cout << "\nYou have to guess the number of 4 non - repeating digits\n" << std::endl;
 
-            std::cout << "correctly = " << correct << "; ";
-            std::cout << "closely = " << close << "." << std::endl;
-        }
-            
+        while (correct != 4 && attempts > 0) {
+            int close = 0;
+            correct = 0;
 
-        else{
-            std::cout << "Wrong number!!!" << std::endl;
+            std::cout << "Enter 4 digits: ";
+            if (InputDigits(anwsers)) {
+                ComparingArrays(decisions, anwsers, correct, close);
+
+                std::cout << "\nCorrectly = " << correct << "; ";
+                std::cout << "Closely = " << close << "." << std::endl;
+                attempts--;
+                std::cout << "You have " << attempts << " attempts left\n" << std::endl;
+
+            }
+
+
+            else {
+                std::cout << "\nWrong number!!!\n" << std::endl;
                 continue;
+            }
         }
+
+        if (correct == 4) {
+            OutputArray(decisions, lenght);
+            std::cout << "Congratulations you have won !!!" << std::endl;
+        }
+        else
+            std::cout << "All attempts ended :(" << std::endl;
+
+        std::cout << "\nIf you want to exit the game, press 0, if you want to play again, press any other number:";
+        std::cin >> play;
+        std::cout << std::endl;
     }
-
-    OutputArray(decisions, lenght);
-
     
-    std::cout << "UrA!";
 }
 
