@@ -3,7 +3,13 @@
 #include <vector>
 #include <algorithm>
 
-
+/**
+ * \brief - заполнение вектора случайными уникальными значениями из заданного диапазона значений
+ * \param IN destinationBegin - итератор начала вектора
+ * \param IN destinationEnd - итератор конца вектора
+ * \param IN startRange - начало диапазона исходных значений
+ * \param IN endRange  - конец диапазона исходных значений 
+ */
 void randomlyFillVectorUniqueValuesFromGivenRange(std::vector<int>::iterator destinationBegin, std::vector<int>::iterator destinationEnd,int startRange,int endRange)
 {
     if ((endRange - startRange) >= (destinationEnd - destinationBegin))
@@ -36,7 +42,15 @@ void randomlyFillVectorUniqueValuesFromGivenRange(std::vector<int>::iterator des
     }
 }
 
-
+/**
+ * \brief - сравнение векторов на однозначное соответсвие
+ * \param IN controlBegin - итератор начала контрольного вектора
+ * \param IN controlEnd - итератор конца контрольного вектора
+ * \param IN subjectBegin - итератор начала проверяемого вектора
+ * \param IN subjectEnd - итератор конца проверяемого вектора
+ * \param OUT correct - количество значений находящихся в контрольном векторе на правильных местах
+ * \param OUT almostCorrect - количество значений находящихся в контрольном векторе,но имеющие неправильное место
+ */
 bool compareVectors(std::vector<int>::iterator controlBegin, std::vector<int>::iterator controlEnd, std::vector<int>::iterator subjectBegin, std::vector<int>::iterator subjectEnd, short int& correct ,short int& almostCorrect)
 {
     if((controlEnd - controlBegin) == (subjectEnd - subjectBegin))
@@ -76,7 +90,12 @@ bool compareVectors(std::vector<int>::iterator controlBegin, std::vector<int>::i
     }
 }
 
-
+/**
+ * \brief Посимвольный ввод числа из консоли в вектор 
+ * \param OUT destinationReverseBegin - обратный итератор начала вектора
+ * \param OUT destinationReverseEnd - обратный итератор конца вектора 
+ * \return Если введенное число не равно длине вектора return false
+ */
 bool enterNumberIntoVector(std::vector<int>::reverse_iterator destinationReverseBegin, std::vector<int>::reverse_iterator destinationReverseEnd)
 {
     std::string enteredValues;
@@ -111,7 +130,11 @@ bool enterNumberIntoVector(std::vector<int>::reverse_iterator destinationReverse
 
 }
 
-
+/**
+ * \brief Вывод вектора в консоль
+ * \param IN sourceBegin - итератор начала вектора
+ * \param IN sourceEnd - итератор конца вектора
+ */
 void outputVectorToConsole(std::vector<int>::iterator sourceBegin, std::vector<int>::iterator sourceEnd)
 {
 	for(std::vector<int>::iterator sourceIter = sourceBegin; sourceIter < sourceEnd;++sourceIter)
