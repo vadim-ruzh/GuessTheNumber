@@ -1,67 +1,71 @@
 ﻿#include <iostream>
-#include <stdlib.h>
-#include <time.h>
 #include <string>
 #include <vector>
 #include <algorithm>
 
 
-bool fillRandomVector(std::vector<int>::iterator vect1Begin, std::vector<int>::iterator vect1End, std::vector<int>::iterator vect2Begin, std::vector<int>::iterator vect2End)
+void randomlyFillVectorUniqueValuesFromGivenRange(std::vector<int>::iterator destinationBegin, std::vector<int>::iterator destinationEnd,int startRange,int endRange)
 {
-    if ((vect1End - vect1Begin) >= (vect2End - vect2Begin))
+    if ((endRange - startRange) >= (destinationEnd - destinationBegin))
     {
-    	std::random_shuffle(vect1Begin, vect1End);
+		std::vector<int> source;
+		for(int i = startRange;i<=endRange;i++)
+		{
+            source.push_back(i);
+		}
 
+        source.shrink_to_fit();
 
-        std::vector<int>::iterator It1 = vect1Begin;
-        std::vector<int>::iterator It2 = vect2Begin;
+    	std::random_shuffle(source.begin(), source.end());
 
-        while(It2 != vect2End)
+        std::vector<int>::iterator sourseIter = source.begin();
+        std::vector<int>::iterator destinationIter = destinationBegin;
+
+        while(destinationIter != destinationEnd)
         {
-            *It2 = *It1;
-            It1++;
-            It2++;
+            *destinationIter = *sourseIter;
+
+            sourseIter++;
+            destinationIter++;
         }
 
-
-		return true;
     }
     else
     {
-        return false;
+        throw "The specified range of values is too small";
     }
-
 }
 
-bool comparingVector(std::vector<int>::iterator vect1Begin, std::vector<int>::iterator vect1End, std::vector<int>::iterator vect2Begin, std::vector<int>::iterator vect2End, short int& correctly, short int& closely)
+
+bool compareVectors(std::vector<int>::iterator controlBegin, std::vector<int>::iterator controlEnd, std::vector<int>::iterator subjectBegin, std::vector<int>::iterator subjectEnd, short int& correct ,short int& almostCorrect)
 {
-    if((vect1End - vect1Begin) == (vect2End - vect2Begin))
+    if((controlEnd - controlBegin) == (subjectEnd - subjectBegin))
     {
-        std::vector<int>::iterator It1 = vect1Begin;
+        std::vector<int>::iterator controlIter = controlBegin;
 
-        while(It1 != vect1End)
+        while(controlIter != controlEnd)
         {
-            std::vector<int>::iterator It2 = vect2Begin;
+            std::vector<int>::iterator subjectIter = subjectBegin;
 
-            if (*It1 == *(It2 + (It1-vect1Begin)))
+            //Если элементы стоящие на одинаковом растоянии от начала равны
+            if (*controlIter == *(subjectIter + (controlIter - controlBegin)))
             {
-                correctly += 1;
+                correct += 1;
             }
-
             else
             {
-	            while (It2 != vect2End)
+	            while (subjectIter != subjectEnd)
 	            {
-                    if (*It1 == *It2) {
-                        closely += 1;
+                    if (*controlIter == *subjectIter)
+                    {
+                        almostCorrect += 1;
                         break;
                     }
-
-                    It2++;
+                    subjectIter++;
 	            }
             }
 
-            It1++;
+            controlIter++;
         }
 
         return true;
@@ -70,41 +74,35 @@ bool comparingVector(std::vector<int>::iterator vect1Begin, std::vector<int>::it
     {
         return  false;
     }
-
-   
-
-
-
-	
 }
 
-bool enteringNumberInVector(std::vector<int>::reverse_iterator begin, std::vector<int>::reverse_iterator end)
-{
-    std::string str;
-    std::cin >> str;
 
-    if (str.length() == end - begin)
+bool enterNumberIntoVector(std::vector<int>::reverse_iterator destinationReverseBegin, std::vector<int>::reverse_iterator destinationReverseEnd)
+{
+    std::string enteredValues;
+    std::cin >> enteredValues;
+
+    if (enteredValues.length() == destinationReverseEnd - destinationReverseBegin)
     {
         int number;
 
         try 
         {
-            number = std::stoi(str);
+            number = std::stoi(enteredValues);
         }
         catch (std::invalid_argument) 
         {
             return false;
         }
 
-        for (std::vector<int>::reverse_iterator It = begin; It != end; It++)
+        for (std::vector<int>::reverse_iterator destinationIter = destinationReverseBegin; destinationIter != destinationReverseEnd; destinationIter++)
         {
-            *It = number % 10;
+            *destinationIter = number % 10;
             number = number / 10;
         }
 
         return true;
     }
-
     else
     {
         return false;
@@ -113,126 +111,70 @@ bool enteringNumberInVector(std::vector<int>::reverse_iterator begin, std::vecto
 
 }
 
-void outputVectorToConsole(std::vector<int>::iterator begin, std::vector<int>::iterator end)
+
+void outputVectorToConsole(std::vector<int>::iterator sourceBegin, std::vector<int>::iterator sourceEnd)
 {
-	for(std::vector<int>::iterator It = begin;It < end;++It)
+	for(std::vector<int>::iterator sourceIter = sourceBegin; sourceIter < sourceEnd;++sourceIter)
 	{
-        std::cout << *It << " ";
+        std::cout << *sourceIter << " ";
 	}
 }
 
-/*
-int main()
-{  
-    const int lenght = 4;
-    int decisions[lenght];
-    int anwsers[lenght];
-
-    const int lenght_alphabet = 10;
-    int alphabet[lenght_alphabet] = { 0,1,2,3,4,5,6,7,8,9 };
-
-    bool play = 1;
-
-    srand(time(NULL));
-    RandomFilling(decisions,alphabet,lenght, lenght_alphabet);
-
-    while (play) {
-        short int correct = 0;
-        short int attempts = 10;
-
-        std::cout << "You have to guess the number of 4 non - repeating digits\n" << std::endl;
-
-        while (correct != 4 && attempts > 0) {
-            short int close = 0;
-            correct = 0;
-
-            std::cout << "Enter 4 digits: ";
-            if (InputDigits(anwsers)) {
-                ComparingArrays(decisions, anwsers, correct, close);
-
-                std::cout << "\nCorrectly = " << correct << "; ";
-                std::cout << "Closely = " << close << "." << std::endl;
-                attempts--;
-                std::cout << "You have " << attempts << " attempts left\n" << std::endl;
-
-            }
-
-
-            else {
-                std::cout << "\nWrong number!!!\n" << std::endl;
-                continue;
-            }
-        }
-
-        if (correct == 4) {
-            OutputArray(decisions, lenght);
-            std::cout << "Congratulations you have won !!!" << std::endl;
-        }
-        else
-            std::cout << "All attempts ended :(" << std::endl;
-
-        std::cout << "\nIf you want to exit the game, press 0, if you want to play again, press any other number:";
-        std::cin >> play;
-        std::cout << std::endl;
-    }
-    
-}
-*/
 
 int main()
 {
-    std::vector<int> alphabet = { 0,1,2,3,4,5,6,7,8,9 };
-    std::vector<int> anwsers(4);
-    std::vector<int> playing(4);
+    short int running = 1;
+    std::vector<int> decisions(4);
+    std::vector<int> userResponses(4);
 
-    bool play = 1;
+    randomlyFillVectorUniqueValuesFromGivenRange(decisions.begin(), decisions.end(), 0, 9);
 
-    srand(time(NULL));
+	std::cout << "You have to guess the number of 4 non - repeating digits\n\n";
 
-    fillRandomVector(alphabet.begin(), alphabet.end(), anwsers.begin(), anwsers.end());
+    while (running) 
+    {
+        short int correctNumbers = 0;
+        short int numberOfAttempts = 10;
 
-    while (play) {
+        std::cout << "You have to guess the number of 4 non - repeating digits\n\n";
 
-        short int correct = 0;
-        short int attempts = 10;
-
-        std::cout << "You have to guess the number of 4 non - repeating digits\n" << std::endl;
-
-        while (correct != 4 && attempts > 0) {
-            short int close = 0;
-            correct = 0;
+        while (correctNumbers != 4 && numberOfAttempts > 0)
+        {
+            short int almostCorrectNumbers = 0;
+            correctNumbers = 0;
 
             std::cout << "Enter 4 digits: ";
-            if (enteringNumberInVector(playing.rbegin(),playing.rend())) 
+
+            if (enterNumberIntoVector(userResponses.rbegin(), userResponses.rend()))
             {
-                comparingVector(anwsers.begin(), anwsers.end(), playing.begin(), playing.end(), correct, close);
+                compareVectors(decisions.begin(), decisions.end(), userResponses.begin(), userResponses.end(), correctNumbers, almostCorrectNumbers);
 
-                std::cout << "\nCorrectly = " << correct << "; ";
-                std::cout << "Closely = " << close << "." << std::endl;
-                attempts--;
-                std::cout << "You have " << attempts << " attempts left\n" << std::endl;
+                std::cout << "\nCorrect numbers = " << correctNumbers << "; ";
+                std::cout << "Almost correct numbers = " << almostCorrectNumbers << ".\n";
 
+                numberOfAttempts--;
+                std::cout << "You have " << numberOfAttempts << " attempts left\n\n" ;
             }
 
-
-            else {
-                std::cout << "\nWrong number!!!\n" << std::endl;
+            else 
+            {
+                std::cout << "\nWrong number!!!\n\n";
                 continue;
             }
         }
 
-        if (correct == 4) {
-            outputVectorToConsole(anwsers.begin(),anwsers.end());
+        if (correctNumbers == 4) 
+        {
+            outputVectorToConsole(decisions.begin(), decisions.end());
             std::cout << "Congratulations you have won !!!" << std::endl;
         }
         else
             std::cout << "All attempts ended :(" << std::endl;
 
+
         std::cout << "\nIf you want to exit the game, press 0, if you want to play again, press any other number:";
-        std::cin >> play;
+        std::cin >> running ;
+
         std::cout << std::endl;
     }
-
-
-
 }
