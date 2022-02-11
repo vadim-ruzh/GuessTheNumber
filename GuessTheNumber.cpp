@@ -157,8 +157,6 @@ int main()
         short int correctNumbers = 0;
         short int numberOfAttempts = 10;
 
-        std::cout << "You have to guess the number of 4 non - repeating digits\n\n";
-
         while (correctNumbers != 4 && numberOfAttempts > 0)
         {
             short int almostCorrectNumbers = 0;
