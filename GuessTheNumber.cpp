@@ -51,7 +51,7 @@ void randomlyFillVectorUniqueValuesFromGivenRange(std::vector<int>::iterator des
  * \param OUT correct - количество значений находящихся в контрольном векторе на правильных местах
  * \param OUT almostCorrect - количество значений находящихся в контрольном векторе,но имеющие неправильное место
  */
-bool compareVectors(std::vector<int>::iterator controlBegin, std::vector<int>::iterator controlEnd, std::vector<int>::iterator subjectBegin, std::vector<int>::iterator subjectEnd, short int& correct ,short int& almostCorrect)
+void compareVectors(std::vector<int>::iterator controlBegin, std::vector<int>::iterator controlEnd, std::vector<int>::iterator subjectBegin, std::vector<int>::iterator subjectEnd, short int& correct ,short int& almostCorrect)
 {
     if((controlEnd - controlBegin) == (subjectEnd - subjectBegin))
     {
@@ -81,12 +81,10 @@ bool compareVectors(std::vector<int>::iterator controlBegin, std::vector<int>::i
 
             controlIter++;
         }
-
-        return true;
     }
     else
     {
-        return  false;
+        throw "vectors for comparison have different lengths";
     }
 }
 
@@ -178,7 +176,6 @@ int main()
                 numberOfAttempts--;
                 std::cout << "You have " << numberOfAttempts << " attempts left\n\n" ;
             }
-
             else 
             {
                 std::cout << "\nWrong number!!!\n\n";
@@ -189,15 +186,17 @@ int main()
         if (correctNumbers == 4) 
         {
             outputVectorToConsole(decisions.begin(), decisions.end());
-            std::cout << "Congratulations you have won !!!" << std::endl;
+            std::cout << "Congratulations you have won !!!\n";
         }
         else
-            std::cout << "All attempts ended :(" << std::endl;
+        {
+            std::cout << "All attempts ended :(\n";
+        }
+            
 
 
         std::cout << "\nIf you want to exit the game, press 0, if you want to play again, press any other number:";
         std::cin >> running ;
-
-        std::cout << std::endl;
+        std::cout << "\n";
     }
 }
