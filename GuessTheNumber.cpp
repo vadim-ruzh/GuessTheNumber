@@ -2,98 +2,126 @@
 #include <stdlib.h>
 #include <time.h>
 #include <string>
+#include <vector>
+#include <algorithm>
 
 
-//Заполнение массива числами из заданного мн-ва чисел,в случайно порядке
-void RandomFilling( int* array,int* alphabet, int array_size, int alphabet_size = 10) {
+bool fillRandomVector(std::vector<int>::iterator vect1Begin, std::vector<int>::iterator vect1End, std::vector<int>::iterator vect2Begin, std::vector<int>::iterator vect2End)
+{
+    if ((vect1End - vect1Begin) >= (vect2End - vect2Begin))
+    {
+    	std::random_shuffle(vect1Begin, vect1End);
 
-    for (int i = alphabet_size - 1; i >= 1; i--) {
-        int j = rand() % (i + 1);
-        int tmp = alphabet[j];
-        alphabet[j] = alphabet[i];
-        alphabet[i] = tmp;
-    }
-    
-    for (int i = 0; i <= array_size - 1; i++) {
-         array[i] = alphabet[i];
-    }
-}
 
-//Заполнение массива случайными числами
-void RandomDigits(int* array, int array_size = 10, int quantity_of_digits = 1) {
-    int quantity = (int)(pow(10, (quantity_of_digits)));
-    array[0] = rand() % quantity;
+        std::vector<int>::iterator It1 = vect1Begin;
+        std::vector<int>::iterator It2 = vect2Begin;
 
-    for (int i = 1; i < array_size; i++) {
-        array[i] = rand() % quantity;
-        for (int j = 0; j < i; j++) {
-            if (array[j] == array[i]) {
-                i--;
-                break;
-            }
+        while(It2 != vect2End)
+        {
+            *It2 = *It1;
+            It1++;
+            It2++;
         }
 
+
+		return true;
+    }
+    else
+    {
+        return false;
     }
 
 }
 
-//Сравнение массивов одинаковой длины
-//Проверка на однозначное соответствие массива array_2 массиву array_1
-//Подсчет количества сооствествующих элементов и элементов для которых нашлось соответсвие,но он имеет неправильную позицию
-void ComparingArrays(int* array_1,int* array_2,short int &correctly, short int &closely,int  array_size = 4) {
-    for (int i = 0; i <= array_size - 1; i++) {
-        if (array_1[i] == array_2[i])
-            correctly += 1;
+bool comparingVector(std::vector<int>::iterator vect1Begin, std::vector<int>::iterator vect1End, std::vector<int>::iterator vect2Begin, std::vector<int>::iterator vect2End, short int& correctly, short int& closely)
+{
+    if((vect1End - vect1Begin) == (vect2End - vect2Begin))
+    {
+        std::vector<int>::iterator It1 = vect1Begin;
 
-        else{
-            for (int j = 0; j <= array_size - 1; j++) {
-                if (array_1[i] == array_2[j]){
-                    closely += 1;
-                }
+        while(It1 != vect1End)
+        {
+            std::vector<int>::iterator It2 = vect2Begin;
 
+            if (*It1 == *(It2 + (It1-vect1Begin)))
+            {
+                correctly += 1;
             }
+
+            else
+            {
+	            while (It2 != vect2End)
+	            {
+                    if (*It1 == *It2) {
+                        closely += 1;
+                        break;
+                    }
+
+                    It2++;
+	            }
+            }
+
+            It1++;
         }
+
+        return true;
     }
+    else
+    {
+        return  false;
+    }
+
+   
+
+
+
+	
 }
 
-//Ввод числа в массив,с указанием желаемого количества символов в числе
-//Заполнение по одному знаку,в один элемент массива
-//Если количество символов в числе не соответсвует заданному,возвращение 0
-int InputDigits(int* array,int quantity_of_digits = 4) {
-
+bool enteringNumberInVector(std::vector<int>::reverse_iterator begin, std::vector<int>::reverse_iterator end)
+{
     std::string str;
     std::cin >> str;
-    
-    if(str.length() == quantity_of_digits){
+
+    if (str.length() == end - begin)
+    {
         int number;
 
-        try {
+        try 
+        {
             number = std::stoi(str);
         }
-        catch (std::invalid_argument) {
-            return 0;
+        catch (std::invalid_argument) 
+        {
+            return false;
         }
 
-        for (int i = quantity_of_digits-1; i>=0; i--) {
-            array[i] = number % 10;
+        for (std::vector<int>::reverse_iterator It = begin; It != end; It++)
+        {
+            *It = number % 10;
             number = number / 10;
         }
-        return 1;
+
+        return true;
     }
 
     else
-        return 0;
+    {
+        return false;
+    }
+
+
 }
 
-//Вывод массива в консоль
-void OutputArray(int* array,int array_size) {
-    std::cout << "Array: ";
-    for (int i = 0; i < array_size; i++)
-        std::cout << array[i] << ' ';
-
-    std::cout << std::endl;
+void outputVectorToConsole(std::vector<int>::iterator begin, std::vector<int>::iterator end)
+{
+	for(std::vector<int>::iterator It = begin;It < end;++It)
+	{
+        std::cout << *It << " ";
+	}
 }
 
+/*
 int main()
 {  
     const int lenght = 4;
@@ -103,7 +131,7 @@ int main()
     const int lenght_alphabet = 10;
     int alphabet[lenght_alphabet] = { 0,1,2,3,4,5,6,7,8,9 };
 
-    short int play = 1;
+    bool play = 1;
 
     srand(time(NULL));
     RandomFilling(decisions,alphabet,lenght, lenght_alphabet);
@@ -149,4 +177,62 @@ int main()
     }
     
 }
+*/
 
+int main()
+{
+    std::vector<int> alphabet = { 0,1,2,3,4,5,6,7,8,9 };
+    std::vector<int> anwsers(4);
+    std::vector<int> playing(4);
+
+    bool play = 1;
+
+    srand(time(NULL));
+
+    fillRandomVector(alphabet.begin(), alphabet.end(), anwsers.begin(), anwsers.end());
+
+    while (play) {
+
+        short int correct = 0;
+        short int attempts = 10;
+
+        std::cout << "You have to guess the number of 4 non - repeating digits\n" << std::endl;
+
+        while (correct != 4 && attempts > 0) {
+            short int close = 0;
+            correct = 0;
+
+            std::cout << "Enter 4 digits: ";
+            if (enteringNumberInVector(playing.rbegin(),playing.rend())) 
+            {
+                comparingVector(anwsers.begin(), anwsers.end(), playing.begin(), playing.end(), correct, close);
+
+                std::cout << "\nCorrectly = " << correct << "; ";
+                std::cout << "Closely = " << close << "." << std::endl;
+                attempts--;
+                std::cout << "You have " << attempts << " attempts left\n" << std::endl;
+
+            }
+
+
+            else {
+                std::cout << "\nWrong number!!!\n" << std::endl;
+                continue;
+            }
+        }
+
+        if (correct == 4) {
+            outputVectorToConsole(anwsers.begin(),anwsers.end());
+            std::cout << "Congratulations you have won !!!" << std::endl;
+        }
+        else
+            std::cout << "All attempts ended :(" << std::endl;
+
+        std::cout << "\nIf you want to exit the game, press 0, if you want to play again, press any other number:";
+        std::cin >> play;
+        std::cout << std::endl;
+    }
+
+
+
+}
