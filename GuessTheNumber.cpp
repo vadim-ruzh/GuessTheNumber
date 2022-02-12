@@ -1,8 +1,25 @@
 ﻿#include <iostream>
+#include <random>
 #include <string>
 #include <vector>
 #include <algorithm>
+#include <deque>
 #include <iomanip>
+#include <iterator>
+#include <stdlib.h>
+
+#define ERROR_RETURN(error_code, msg) \
+	std::cout << __FILE__ << ":" << __LINE__ << " ERROR: function " << __FUNCTION__ \
+		<< msg; \
+	return error_code;
+
+enum results
+{
+	sOk = 0,
+	eFail,
+	eInvalidArgument,
+	eInvalidUserInput
+};
 
 /**
  * \brief - заполнение вектора случайными уникальными значениями из заданного диапазона значений
@@ -10,81 +27,38 @@
  * \param IN destinationEnd - итератор на конец вектора
  * \param IN startRange - начало диапазона исходных значений
  * \param IN endRange  - конец диапазона исходных значений
+ * \warning has no effect if ...
+ * \throw std::runtime_error if ...
  */
 // REWIEW: destinationBegin/End укоротить на dstBegin/End
 // TODO: а теперь то что делают startRange и endRange надо заменить на функтор, по аналогии с тем как работает std::generate_n(я описал пример внутри функции в /HERE1).
 /* TODO: а теперь итераторы должны быть на шаблонах, можешь посмотреть как они принимаются в том же std::random_shuffle.
  * Для начала сделай std::vector<Type>::iterator, вместо std::vector<int>::iterator.
  */
-void randomlyFillVectorUniqueValuesFromGivenRange(std::vector<int>::iterator destinationBegin, std::vector<int>::iterator destinationEnd,int startRange,int endRange)
+template<typename Iterator>
+results randomlyFillVectorUniqueValuesFromGivenRange(
+	Iterator destinationBegin, Iterator destinationEnd,
+	int32_t startRange, int32_t endRange)
 {
-	/* REWIEW: сходу сложно понять почему именно так.
-	 * Нужно описать подобные немаловажные вещи в секции \warning в комментарию к функции вида: Функция не имеет эффекта если...
-	 */
-	/* REWIEW: /HERE2 стоит заменить на
-	 *		if((endRange - startRange) >= (destinationEnd - destinationBegin))
-	 *		{
-	 *			throw ...;
-	 *		}
-	 *		std::vector<int> source;
-	 *		...
-	 *	Тем самым избавиться от вложенности, сделав else неявным
-	 */
-    if ((endRange - startRange) >= (destinationEnd - destinationBegin))
-    {
-    	/* REWIEW: /HERE1 стоит заменить на std::generate_n
-    	 * с генератором вида [i = startRange] () mutable { return i++; }
-    	 */
-    	/* REWIEW:
-    	 * Мы точно значем, что в векторе будет endRange-startRange элементов
-    	 *		поэтому мы можем заранее выделить всю нужную память.
-    	 * Потому что иначе, вектор будет ресайзиться почти при каждом push_back-e, а это:
-    	 *		1. Запрос у операционки нового(возможно длинного) куска непрерывной памяти.
-    	 *				Если память фрагментирована, то его может быть сложно(долго) найти.
-    	 *		2. Копирование всех элементов из 'старой' памяти в 'новую'
-    	 *		3. Освобождение старой памяти.
-    	 *		3.* Если элементы в контейнере сложные(к примеру std::string),
-    	 *				то в процессе освобождения для каждого элемента вызовется деструкторю
-    	 * Сложность такого алгоритма можешь попробовать посчитать сам.
-    	 * И всего этого можно избежать вызвав source.reserve(endRange-startRange);
-    	 * Тогда и shrink_to_fit не нужно будет вызывать.
-    	 */
-		std::vector<int> source;
-		for(int i = startRange;i<=endRange; ++i)
-		{
-            source.push_back(i);
-		}
+	const auto rangeElementsCount = endRange - startRange;
+	const auto destinationElementsCount = destinationEnd - destinationBegin;
 
-        source.shrink_to_fit();
+	if (rangeElementsCount < destinationElementsCount)
+	{
+		ERROR_RETURN(results::eInvalidArgument, ": The specified range of values is too small");
+	}
+	
+	std::vector<int> source;
+	source.reserve(rangeElementsCount);
+	std::generate_n(
+		std::back_inserter(source), source.size(),
+		[i = startRange]() mutable { return i++; });
 
-    	/* REWIEW: смотри на варнинги от решарпера.
-    		std::random_shuffle был удалён в c++17, используй std::shuffle
-    	*/
-    	std::random_shuffle(source.begin(), source.end());
+	std::shuffle(source.begin(), source.end(), std::mt19937(std::random_device()()));
 
-        std::vector<int>::iterator sourseIter = source.begin();
-    	// REWIEW: дополнительный итератор не нужен, вместо destinationIter можно использовать destinationBegin.
-        std::vector<int>::iterator destinationIter = destinationBegin;
+	std::copy_n(source.begin(), destinationElementsCount, destinationBegin);
 
-    	/* REWIEW: стоит заменить как минимум на for(;dstBegin != dstEnd; ++sourseIter, ++destinationIter)
-    	 * Но ещё лучше будет использовать std::copy, ещё в похожих кейсах используют std::transform
-    	 */
-        while(destinationIter != destinationEnd)
-        {
-            *destinationIter = *sourseIter;
-
-        	// REWIEW: заменить на префиксный инкремент
-            sourseIter++;
-            destinationIter++;
-        }
-
-    }
-    else
-    {
-    	// REWIEW: выбрасывать нужно исключения типа std:::runtime_exception, но не сырые строки
-    	// REWIEW: все исключения функции нужно описать в секции \throws(или \throw) в комментарии к функции.
-        throw "The specified range of values is too small";
-    }
+	return results::sOk;
 }
 
 /**
@@ -101,191 +75,158 @@ void randomlyFillVectorUniqueValuesFromGivenRange(std::vector<int>::iterator des
  */
 // REWIEW: слишком длинная строка, надо её форматировать. Иначе приходится 'крутить' вправо для того чтобы увидеть все аргументы. 
 // REWIEW: почему элементы вектора int, а тот же correct-short int?
-void compareVectors(std::vector<int>::iterator controlBegin, std::vector<int>::iterator controlEnd, std::vector<int>::iterator subjectBegin, std::vector<int>::iterator subjectEnd, short int& correct ,short int& almostCorrect)
+template<typename ControlIterator, typename SubjectIterator>
+results compareVectors(
+	ControlIterator controlBegin, ControlIterator controlEnd, 
+	SubjectIterator subjectBegin, SubjectIterator subjectEnd, 
+	int& correct, int& almostCorrect)
 {
-	/* REWIEW: сходу сложно понять почему именно так.
-	 * Нужно описать подобные немаловажные вещи в секции \warning в комментарию к функции вида: Функция не имеет эффекта если...
-	 */
-	 /* REWIEW: стоит заменить на
-	  *		if((controlEnd - controlBegin) != (subjectEnd - subjectBegin))
-	  *		{
-	  *			throw ...;
-	  *		}
-	  *		std::vector<int>::iterator controlIter = controlBegin;
-	  *		...
-	  *	Тем самым избавиться от вложенности, сделав else неявным
-	  */
-    if((controlEnd - controlBegin) == (subjectEnd - subjectBegin))
+    if((controlEnd - controlBegin) != (subjectEnd - subjectBegin))
     {
-		// REWIEW: итератор controlIter не нужен, его можно заменить на controlBegin
-        std::vector<int>::iterator controlIter = controlBegin;
+		ERROR_RETURN(results::eInvalidArgument, "vectors for comparison have different lengths");
+    }
+	
+	auto controlIter = controlBegin;
 
-        while(controlIter != controlEnd)
+    for(;controlIter != controlEnd; ++controlIter)
+    {
+        if (*controlIter == *(subjectBegin + std::distance(controlBegin, controlIter)))
         {
-        	// REWIEW: итератор subjectIter не нужен, его можно заменить на subjectBegin
-            std::vector<int>::iterator subjectIter = subjectBegin;
-
-            //Если элементы стоящие на одинаковом растоянии от начала равны
-            if (*controlIter == *(subjectIter + (controlIter - controlBegin)))
-            {
-				// REWIEW: заменить на инкремент
-                correct += 1;
-            }
-            else
-            {
-            	/* REWIEW: заменить на
-            	 * almostCorrect += std::any_of(subjectBegin, subjectEnd, *controlIter);
-            	 */ 
-	            while (subjectIter != subjectEnd)
-	            {
-                    if (*controlIter == *subjectIter)
-                    {
-						// REWIEW: заменить на инкремент
-                        almostCorrect += 1;
-                        break;
-                    }
-					// REWIEW: заменить на префиксный инкремент
-                    subjectIter++;
-	            }
-            }
-
-			// REWIEW: заменить на префиксный инкремент
-            controlIter++;
+            correct += 1;
+        }
+        else
+        {
+			almostCorrect += std::any_of(subjectBegin, subjectEnd, *controlIter);
         }
     }
-    else
-    {
-		// REWIEW: выбрасывать нужно исключения типа std:::runtime_exception, но не сырые строки
-		// REWIEW: все исключения функции нужно описать в секции \throws(или \throw) в комментарии к функции.
-        throw "vectors for comparison have different lengths";
-    }
+
+	return results::sOk;
 }
 
 
 /**
 * \brief Посимвольный ввод числа из консоли в вектор
-* \param OUT destinationReverseBegin - обратный итератор на начало вектора
-* \param OUT destinationReverseEnd - обратный итератор на конец вектора
+* \param destinationReverseBegin [OUT] - обратный итератор на начало вектора
+* \param destinationReverseEnd [OUT] - обратный итератор на конец вектора
 * \return Если введенное число не равно длине вектора return false
 */
 // TODO: вот тут вот хорошо видно почему итераторы должны быть шаблонными. А если ты захочешь заполнить не с конца в начало, а наоборот?
-bool enterNumberIntoVector(std::vector<int>::reverse_iterator destinationReverseBegin, std::vector<int>::reverse_iterator destinationReverseEnd)
+template<typename Iterator>
+results enterNumberIntoVector(Iterator destinationReverseBegin, Iterator destinationReverseEnd)
 {
 	std::string enteredValues;
 	std::cin >> enteredValues;
 
 	// REWIEW: сделать else неявным, и вынести его перед if(см. комментарий /HERE2)
-	if (enteredValues.length() == destinationReverseEnd - destinationReverseBegin)
+	if (enteredValues.length() != destinationReverseEnd - destinationReverseBegin)
 	{
-		int number;
-
-		try
-		{
-			number = std::stoi(enteredValues);
-		}
-		// REWIEW: catch (const std::invalid_argument& e)
-		/* REWIEW: про такие вот 'заглушенные' исключения лучше писать в лог причину ошибки,
-		 *		чтобы потом по логам можно было понять в чём дело.
-		 * Сейчас же, лучше писать в консоль:
-		 *		std::cout << __FILE__ << ":" << __LINE__ << " ERROR: function " << __FUNCTION__ << ": fail to convert entered string " << std::quoted(enteredValues)
-		 *				  << " to number. Error description: " << e.what();
-		 * Это заклинание выведет примерно следующее:
-		 *	e:\projects\guessthenumber\guessthenumber.cpp:198 ERROR: function enterNumberIntoVector: fail to convert entered string "qwer" to number. Internal error description: invalid stoi argument
-		 */
-		catch (std::invalid_argument e)
-		{
-			std::cout << __FILE__ << ":" << __LINE__ << " ERROR: function " << __FUNCTION__ << ": fail to convert entered string " << std::quoted(enteredValues)
-				<< " to number. Internal error description: " << e.what();
-
-			/* REWIEW: ты пишешь: \return Если введенное число не равно длине вектора return false
-			 * Но этот кейс не похож на то, что ты описал.
-			 */
-			return false;
-		}
-
-		// REWIEW: Дополнительные итераторы не нужны, используй destinationReverseBegin и destinationReverseEnd
-		for (std::vector<int>::reverse_iterator destinationIter = destinationReverseBegin; destinationIter != destinationReverseEnd; ++destinationIter)
-		{
-			*destinationIter = number % 10;
-			number = number / 10;
-		}
-
-		return true;
-	}
-	else
-	{
-		return false;
+		ERROR_RETURN(results::eInvalidUserInput, " to number. Internal error description");
 	}
 
+	int number;
 
+	try
+	{
+		number = std::stoi(enteredValues);
+	}
+	// REWIEW: catch (const std::invalid_argument& e)
+	/* REWIEW: про такие вот 'заглушенные' исключения лучше писать в лог причину ошибки,
+	 *		чтобы потом по логам можно было понять в чём дело.
+	 * Сейчас же, лучше писать в консоль:
+	 *		std::cout << __FILE__ << ":" << __LINE__ << " ERROR: function " << __FUNCTION__ << ": fail to convert entered string " << std::quoted(enteredValues)
+	 *				  << " to number. Error description: " << e.what();
+	 * Это заклинание выведет примерно следующее:
+	 *	e:\projects\guessthenumber\guessthenumber.cpp:198 ERROR: function enterNumberIntoVector: fail to convert entered string "qwer" to number. Internal error description: invalid stoi argument
+	 */
+	catch (const std::invalid_argument& e)
+	{
+		ERROR_RETURN(results::eInvalidUserInput, " to number. Internal error description: " << e.what());
+	}
+
+	// REWIEW: Дополнительные итераторы не нужны, используй destinationReverseBegin и destinationReverseEnd
+	for (; destinationReverseBegin != destinationReverseEnd; ++destinationReverseBegin)
+	{
+		*destinationReverseBegin = number % 10;
+		number = number / 10;
+	}
+
+	return results::sOk;
 }
-
-/**
- * \brief Вывод вектора в консоль
- * \param IN sourceBegin - итератор на начало вектора
- * \param IN sourceEnd - итератор на конец вектора
- */
-void outputVectorToConsole(std::vector<int>::iterator sourceBegin, std::vector<int>::iterator sourceEnd)
-{
-	// REWIEW: используй std::transform в паре с std::ostream_iterator
-	for(std::vector<int>::iterator sourceIter = sourceBegin; sourceIter != sourceEnd;++sourceIter)
-	{
-        std::cout << *sourceIter << " ";
-	}
-}
-
 
 int main()
 {
-    short int running = 1;
-    std::vector<int> decisions(4);
-    std::vector<int> userResponses(4);
+	try
+	{
+		short int running = 1;
+		std::vector<int> decisions(4);
+		std::vector<int> userResponses(4);
 
-    randomlyFillVectorUniqueValuesFromGivenRange(decisions.begin(), decisions.end(), 0, 9);
+		if (randomlyFillVectorUniqueValuesFromGivenRange(decisions.begin(), decisions.end(), 0, 9))
+		{
 
-	std::cout << "You have to guess the number of 4 non - repeating digits\n\n";
+		}
 
-    while (running) 
-    {
-        short int correctNumbers = 0;
-        short int numberOfAttempts = 10;
+		std::cout << "You have to guess the number of 4 non - repeating digits\n\n";
 
-        while (correctNumbers != 4 && numberOfAttempts > 0)
-        {
-            short int almostCorrectNumbers = 0;
-            correctNumbers = 0;
+		while (running)
+		{
+			int correctNumbers = 0;
+			int numberOfAttempts = 10;
 
-            std::cout << "Enter 4 digits: ";
+			while (correctNumbers != 4 && numberOfAttempts > 0)
+			{
+				int almostCorrectNumbers = 0;
+				correctNumbers = 0;
 
-            if (enterNumberIntoVector(userResponses.rbegin(), userResponses.rend()))
-            {
-                compareVectors(decisions.begin(), decisions.end(), userResponses.begin(), userResponses.end(), correctNumbers, almostCorrectNumbers);
-                std::cout << "\nCorrect numbers = " << correctNumbers << "; ";
-                std::cout << "Almost correct numbers = " << almostCorrectNumbers << ".\n";
+				std::cout << "Enter 4 digits: ";
 
-                numberOfAttempts--;
-                std::cout << "You have " << numberOfAttempts << " attempts left\n\n" ;
-            }
-            else 
-            {
-                std::cout << "\nWrong number!!!\n\n";
-                continue;
-            }
-        }
+				if (enterNumberIntoVector(userResponses.rbegin(), userResponses.rend()))
+				{
+					continue;
+				}
+				
+				auto result = compareVectors(decisions.begin(), decisions.end(), userResponses.begin(), userResponses.end(), correctNumbers, almostCorrectNumbers);
+				switch (result)
+				{
+				case results::sOk: break;
+				case results::eInvalidArgument:
+					std::cout << "\nPROGRAM IS BROKEN, PLEASE STAND BY!!!\n\n";
+					return EXIT_FAILURE;
+				default:
+					continue;
+				}
 
-        if (correctNumbers == 4) 
-        {
-            outputVectorToConsole(decisions.begin(), decisions.end());
-            std::cout << "Congratulations you have won !!!\n";
-        }
-        else
-        {
-            std::cout << "All attempts ended :(\n";
-        }
+				std::cout << "\nCorrect numbers = " << correctNumbers << "; ";
+				std::cout << "Almost correct numbers = " << almostCorrectNumbers << ".\n";
 
-        std::cout << "\nIf you want to exit the game, press 0, if you want to play again, press any other number:";
-        std::cin >> running ;
+				numberOfAttempts--;
+				std::cout << "You have " << numberOfAttempts << " attempts left\n\n";
+			}
 
-        std::cout << "\n";
-    }
+			if (correctNumbers == 4)
+			{
+
+				std::copy(decisions.begin(), decisions.end(), std::ostream_iterator<int>(std::cout, " "));
+				std::cout << "Congratulations you have won !!!\n";
+			}
+			else
+			{
+				std::cout << "All attempts ended :(\n";
+			}
+
+			std::cout << "\nIf you want to exit the game, press 0, if you want to play again, press any other number:";
+			std::cin >> running;
+
+			std::cout << "\n";
+		}
+		
+		return EXIT_SUCCESS;
+	}
+	catch (...)
+	{
+		std::cout << __FILE__ << ":" << __LINE__ << " ERROR: function " << __FUNCTION__
+			<< ": unexpected error";
+
+		return EXIT_FAILURE;
+	}
 }
