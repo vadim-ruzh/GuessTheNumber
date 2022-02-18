@@ -1,217 +1,258 @@
 ﻿#include <iostream>
-#include <random>
 #include <string>
 #include <vector>
 #include <algorithm>
-#include <array>
-#include <deque>
-#include <iomanip>
-#include <iterator>
-#include <array>
-#include <list>
-#include <stdlib.h>
+#include <random>
+#include <cstdlib>
 
-#define ERROR_RETURN(error_code, msg) \
-	std::cout << __FILE__ << ":" << __LINE__ << " ERROR: function " << __FUNCTION__ \
-		<< msg; \
-	return error_code;
 
-enum results
+//Вывод кода результата работы функции и сообщения об ошибке 
+#define ERROR_RETURN(error_code) \
+	for(int16_t __macro_i = 0;;++__macro_i)\
+		if(__macro_i)\
+			return error_code;\
+		else\
+		std::cout << "\n" << __FILE__ << ":" << __LINE__ << " ERROR: function " << __FUNCTION__  
+
+
+
+//Коды результата работы функций 
+enum resultCode
 {
 	sOk = 0,
-	eFail,
+	eUnexpectedError,
 	eInvalidArgument,
-	eInvalidUserInput
+	eInvalidUserInput,
+	eIncorrectConfigurations
 };
 
+
 /**
- * \brief - заполнение вектора случайными уникальными значениями из заданного диапазона значений
- * \param IN destinationBegin - итератор на начало вектора
- * \param IN destinationEnd - итератор на конец вектора
- * \param IN startRange - начало диапазона исходных значений
- * \param IN endRange  - конец диапазона исходных значений
- * \warning has no effect if ...
- * \throw std::runtime_error if ...
- */
-// REWIEW: destinationBegin/End укоротить на dstBegin/End
-// TODO: а теперь то что делают startRange и endRange надо заменить на функтор, по аналогии с тем как работает std::generate_n(я описал пример внутри функции в /HERE1).
-/* TODO: а теперь итераторы должны быть на шаблонах, можешь посмотреть как они принимаются в том же std::random_shuffle.
- * Для начала сделай std::vector<Type>::iterator, вместо std::vector<int>::iterator.
+ * \brief - Заполнение вектора значениями из заданного диапазона,в случайном порядке
+ * \tparam Iterator - Итератор на вектор
+ * \param dstBegin - Итератор на начало вектора 
+ * \param dstEnd - Итератор на конец вектора
+ * \param startRange - Начало диапазона исходных значений 
+ * \param endRange - Конец диапазона исходных значений
+ * \return resultCode - Код результата работы функции
+ * \warning - функция не имеет смысла,если длина диапазона исходных значений <= 0
+ * \warning - функция не имеет смысла,если длина диапазона исходных значений < длины вектора
  */
 template <typename Iterator>
-results randomlyFillVectorUniqueValuesFromGivenRange(
-	Iterator destinationBegin, Iterator destinationEnd,
-	int32_t startRange, int32_t endRange)
+resultCode fillVectorUniqueValuesFromRangeAtRandom(Iterator dstBegin,Iterator dstEnd, int32_t startRange, int32_t endRange)
 {
-	const auto rangeElementsCount = endRange - startRange;
-	const auto destinationElementsCount = std::distance(destinationBegin, destinationEnd);
-
-	if (rangeElementsCount < destinationElementsCount)
+	//Проверка на корректность границ диапазона исзодных значений 
+	if (startRange >= endRange)
 	{
-		ERROR_RETURN(results::eInvalidArgument, ": The specified range of values is too small");
+		ERROR_RETURN(eInvalidArgument) << ":The length of the range is incorrect ";
 	}
 
-	std::vector<int> source;
+	int32_t rangeElementsCount;
+
+	//Вычесление размера диапазона исходных значений,в зависимости от заданных границ
+	if (startRange >= 0 && endRange > 0)
+	{
+		rangeElementsCount = endRange - startRange;
+	}
+	else
+	{
+		if (startRange < 0 && endRange < 0)
+		{
+			rangeElementsCount = startRange * (-1) - endRange * (-1);
+		}
+		else
+		{
+			rangeElementsCount = startRange * (-1) + endRange;
+		}
+	}
+
+	const auto dstElementsCount = std::distance(dstBegin, dstEnd);
+
+	if (rangeElementsCount < dstElementsCount)
+	{
+		ERROR_RETURN(resultCode::eInvalidArgument) << ": The specified range of values is too small";
+	}
+
+	std::vector<int32_t> source;
 	source.reserve(rangeElementsCount);
-	std::generate_n(
-		std::back_inserter(source), source.size(),
-		[i = startRange]() mutable { return i++; });
 
+
+	std::generate_n(std::back_inserter(source), source.capacity(),
+							[i = startRange]() mutable { return i++; });
 	std::shuffle(source.begin(), source.end(), std::mt19937(std::random_device()()));
+	std::copy_n(source.begin(), dstElementsCount, dstBegin);
 
-	std::copy_n(source.begin(), destinationElementsCount, destinationBegin);
-
-	return results::sOk;
+	return resultCode::sOk;
 }
 
+
 /**
- * \brief - сравнение векторов одинаковой длин на однозначное соответсвие
- * \param IN controlBegin - итератор на начало контрольного вектора
- * \param IN controlEnd - итератор на конец контрольного вектора
- * \param IN subjectBegin - итератор на начало проверяемого вектора
- * \param IN subjectEnd - итератор на конец проверяемого вектора
- * \param OUT correct - количество значений находящихся в контрольном векторе на правильных местах
- * \param OUT almostCorrect - количество значений находящихся в контрольном векторе,но имеющие неправильное место
+ * \brief Сравнение векторов на однозначное соответсвие 
+ * \tparam ControlIterator - Итератор на вектор
+ * \tparam SubjectIterator - Итератор на вектор
+ * \param controlBegin - Итератор на начало контрольного вектора
+ * \param controlEnd - Итератор на конец контрольного вектора
+ * \param subjectBegin - Итератор на начало сравниваемого вектора
+ * \param subjectEnd - Итератор на конец сравниваемого вектора
+ * \param correct - Количество элементов из subject имеющие однозначное соотвествие в control 
+ * \param almostCorrect - Количество элементов из subject,находящиеся в control,но имеющие неправильно положение 
+ * \return resultCode - Код результата работы функции
+ * \warning - Функция не имеет смысла,если векторы имеют разную длину
  */
-/* REWIEW: а нельзя назвать controlBegin-firstBegin, а subjectBegin-secondBegin?
- * Результат фунции поменяется, если мы вместо control-a будем передавать subject(и наоборот)?
- */
-// REWIEW: слишком длинная строка, надо её форматировать. Иначе приходится 'крутить' вправо для того чтобы увидеть все аргументы. 
-// REWIEW: почему элементы вектора int, а тот же correct-short int?
-template <typename ControlIterator, typename SubjectIterator>
-results compareVectors(
-	ControlIterator controlBegin, ControlIterator controlEnd,
-	SubjectIterator subjectBegin, SubjectIterator subjectEnd,
-	int& correct, int& almostCorrect)
+template <typename Iterator>
+resultCode compareVectors(Iterator controlBegin, Iterator controlEnd,
+						  Iterator subjectBegin, Iterator subjectEnd,
+							int32_t& correct, int32_t& almostCorrect)
 {
 	if (std::distance(controlBegin, controlEnd) != std::distance(subjectBegin, subjectEnd))
 	{
-		ERROR_RETURN(results::eInvalidArgument, "vectors for comparison have different lengths");
+		ERROR_RETURN(resultCode::eInvalidArgument) << "vectors for comparison have different lengths";
 	}
 
-	auto controlIter = controlBegin;
-
-	for (; controlIter != controlEnd; ++controlIter)
+	for (auto controlIter = controlBegin; controlIter != controlEnd; ++controlIter)
 	{
-		auto subjCopy = subjectBegin;
-		std::advance(subjCopy, std::distance(controlBegin, controlIter));
-		if (*controlIter == *subjCopy)
+		auto subjectIter = subjectBegin + std::distance(controlBegin, controlIter);
+
+		if (*controlIter == *subjectIter)
 		{
 			correct += 1;
 		}
 		else
 		{
-			almostCorrect += std::any_of(
-				subjectBegin, subjectEnd, 
-				[controlIter](int i) { return i == *controlIter; });
+			almostCorrect += std::any_of(subjectBegin, subjectEnd,
+					[controlIter](int i) { return i == *controlIter; });
 		}
 	}
 
-	return results::sOk;
+	return resultCode::sOk;
 }
+
 
 /**
-* \brief Посимвольный ввод числа из консоли в вектор
-* \param destinationReverseBegin [OUT] - обратный итератор на начало вектора
-* \param destinationReverseEnd [OUT] - обратный итератор на конец вектора
-* \return Если введенное число не равно длине вектора return false
-*/
-// TODO: вот тут вот хорошо видно почему итераторы должны быть шаблонными. А если ты захочешь заполнить не с конца в начало, а наоборот?
+ * \brief Посимвольный ввод числа из консоли в вектор
+ * \tparam - Итератор на вектор
+ * \param dstBegin - Итератор на начало вектора
+ * \param dstEnd -Итератор на конец вектора
+ * \return resultCode - Код результата работы функции
+ * \warning - Функция не имеет смысла,если значение пользовательского ввода не является числом
+ * \warning - Функция не имеет смысла,если размер значения пользовательского ввода не равен длине вектора  
+ */
 template <typename Iterator>
-results enterNumberIntoVector(Iterator destinationReverseBegin, Iterator destinationReverseEnd)
+resultCode enterNumberIntoVector(Iterator dstBegin, Iterator dstEnd)
 {
-	std::string enteredValues;
-	std::cin >> enteredValues;
+	int32_t inputVal;
+	std::cin >> inputVal;
 
-	// REWIEW: сделать else неявным, и вынести его перед if(см. комментарий /HERE2)
-	if (enteredValues.length() != std::distance(destinationReverseBegin, destinationReverseEnd))
+	if(std::cin.fail())
 	{
-		ERROR_RETURN(results::eInvalidUserInput, " to number. Internal error description");
+		std::cin.clear();
+		std::cin.ignore(std::cin.rdbuf()->in_avail());
+		ERROR_RETURN(resultCode::eInvalidUserInput) << " :The entered value is not a number ";
 	}
 
-	int number;
+	std::string enteredValues = std::to_string(inputVal);
 
-	try
+	if (enteredValues.length() != std::distance(dstBegin,dstEnd))
 	{
-		number = std::stoi(enteredValues);
-	}
-		// REWIEW: catch (const std::invalid_argument& e)
-		/* REWIEW: про такие вот 'заглушенные' исключения лучше писать в лог причину ошибки,
-		 *		чтобы потом по логам можно было понять в чём дело.
-		 * Сейчас же, лучше писать в консоль:
-		 *		std::cout << __FILE__ << ":" << __LINE__ << " ERROR: function " << __FUNCTION__ << ": fail to convert entered string " << std::quoted(enteredValues)
-		 *				  << " to number. Error description: " << e.what();
-		 * Это заклинание выведет примерно следующее:
-		 *	e:\projects\guessthenumber\guessthenumber.cpp:198 ERROR: function enterNumberIntoVector: fail to convert entered string "qwer" to number. Internal error description: invalid stoi argument
-		 */
-	catch (const std::invalid_argument& e)
-	{
-		ERROR_RETURN(results::eInvalidUserInput, " to number. Internal error description: " << e.what());
+		std::cin.clear();
+		std::cin.ignore(std::cin.rdbuf()->in_avail());
+		ERROR_RETURN(resultCode::eInvalidUserInput) << " :The length of the entered value is incorrect ";
 	}
 
-	// REWIEW: Дополнительные итераторы не нужны, используй destinationReverseBegin и destinationReverseEnd
-	for (; destinationReverseBegin != destinationReverseEnd; ++destinationReverseBegin)
-	{
-		*destinationReverseBegin = number % 10;
-		number = number / 10;
-	}
+	std::transform(enteredValues.begin(), enteredValues.end(), dstBegin, [](char ch) {return ch - '0'; });
 
-	return results::sOk;
+	return resultCode::sOk;
 }
+
+
+//Конфигурация игры
+struct gameConfiguration
+{
+	//Количество попыток у пользователя ввести значение 
+	int32_t numberOfAttempts = 10;
+
+	//Начало и конец диапазона чисел 
+	int32_t startRangeOfInitialValues = 0;
+	int32_t endRangeOfInitialValues = 9;
+
+	//Количество цифр в числе 
+	int32_t numberOfDigits = 4;
+	//Количество верных цифр в числе 
+	int32_t needCorrectNumbers = 4;
+};
+
 
 int main()
 {
 	try
 	{
-		short int running = 1;
-		std::list<int> decisions{};
-		std::list<int> userResponses{};
-		
-		if (randomlyFillVectorUniqueValuesFromGivenRange(decisions.begin(), decisions.end(), 0, 9))
+		gameConfiguration config;
+
+		//Проверка корректности параметров конфигурации игры 
+		if (config.numberOfDigits < 1 || config.needCorrectNumbers < 1)
 		{
+			ERROR_RETURN(eIncorrectConfigurations) << " :The configuration of the number of digits is incorrect ";
+		}
+		if ((config.startRangeOfInitialValues < 0 || config.startRangeOfInitialValues > 9)
+			|| (config.endRangeOfInitialValues < 0 || config.endRangeOfInitialValues > 9))
+		{
+			ERROR_RETURN(eIncorrectConfigurations) << " :The configuration of the range of initial values is set incorrectly ";
+		}
+		if(config.numberOfAttempts <= 0)
+		{
+			ERROR_RETURN(eIncorrectConfigurations) << " :The configuration of the number of attempts is not set correctly ";
 		}
 
-		std::cout << "You have to guess the number of 4 non - repeating digits\n\n";
-
-		while (running)
+		while (true)
 		{
-			int correctNumbers = 0;
-			int numberOfAttempts = 10;
+			std::vector<int32_t> decisions(config.numberOfDigits);
+			std::vector<int32_t> userResponses(config.numberOfDigits);
 
-			while (correctNumbers != 4 && numberOfAttempts > 0)
+			if (fillVectorUniqueValuesFromRangeAtRandom(
+				decisions.begin(),decisions.end(),
+				config.startRangeOfInitialValues, config.endRangeOfInitialValues))
 			{
-				int almostCorrectNumbers = 0;
+				return EXIT_FAILURE;
+			}
+
+			std::cout << "You have to guess the number of " << config.numberOfDigits << " non - repeating digits\n";
+			std::cout << "to win, you need to enter " << config.numberOfDigits << " correct numbers\n\n";
+
+			int32_t correctNumbers = 0;
+			int32_t attempts = config.numberOfAttempts;
+
+			while (correctNumbers != config.needCorrectNumbers && attempts > 0)
+			{
+				int32_t almostCorrectNumbers = 0;
 				correctNumbers = 0;
 
-				std::cout << "Enter 4 digits: ";
+				std::cout << "Enter " << config.numberOfDigits << " digits: ";
 
-				if (enterNumberIntoVector(userResponses.rbegin(), userResponses.rend()))
+				if (enterNumberIntoVector(userResponses.begin(), userResponses.end()))
 				{
+					std::cout << "\n\nTry entering the value again\n";
 					continue;
 				}
 
-				auto result = compareVectors(decisions.begin(), decisions.end(), userResponses.begin(),
-				                             userResponses.end(), correctNumbers, almostCorrectNumbers);
-				switch (result)
+				if(compareVectors(decisions.begin(), decisions.end(),
+							userResponses.begin(),userResponses.end(),
+										correctNumbers, almostCorrectNumbers))
 				{
-				case results::sOk: break;
-				case results::eInvalidArgument:
-					std::cout << "\nPROGRAM IS BROKEN, PLEASE STAND BY!!!\n\n";
 					return EXIT_FAILURE;
-				default:
-					continue;
 				}
+				
 
 				std::cout << "\nCorrect numbers = " << correctNumbers << "; ";
 				std::cout << "Almost correct numbers = " << almostCorrectNumbers << ".\n";
 
-				numberOfAttempts--;
-				std::cout << "You have " << numberOfAttempts << " attempts left\n\n";
+				attempts--;
+				std::cout << "You have " << attempts << " attempts left\n\n";
 			}
 
-			if (correctNumbers == 4)
+
+			if (correctNumbers == config.needCorrectNumbers)
 			{
-				std::copy(decisions.begin(), decisions.end(), std::ostream_iterator<int>(std::cout, " "));
+				std::copy(decisions.begin(), decisions.end(), std::ostream_iterator<int32_t>(std::cout, " "));
 				std::cout << "Congratulations you have won !!!\n";
 			}
 			else
@@ -219,20 +260,20 @@ int main()
 				std::cout << "All attempts ended :(\n";
 			}
 
-			std::cout <<
-				"\nIf you want to exit the game, press 0, if you want to play again, press any other number:";
-			std::cin >> running;
+			//Предложение пользователю сыграть еще раз 
+			std::cout << "\nIf you want to play again, press 1,if you want to exit the game , press any other button:";
+			bool startAgain = true;
+			std::cin >> startAgain;
+			if (std::cin.fail() || !startAgain)
+			{
+				return EXIT_FAILURE;
+			}
 
 			std::cout << "\n";
 		}
-
-		return EXIT_SUCCESS;
 	}
 	catch (...)
 	{
-		std::cout << __FILE__ << ":" << __LINE__ << " ERROR: function " << __FUNCTION__
-			<< ": unexpected error";
-
-		return EXIT_FAILURE;
+		ERROR_RETURN(eUnexpectedError) << " :An undefined error has occurred";
 	}
 }
