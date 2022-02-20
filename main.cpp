@@ -38,7 +38,8 @@ int main()
 			ERROR_RETURN(EXIT_FAILURE) << " :The configuration of the number of attempts is not set correctly ";
 		}
 
-		game::StartEventLoop(config);
+		ERROR_RETURN_EX(game::StartEventLoop(config), EXIT_FAILURE)
+			<< "Can't start game event loop";
 	}
 	catch (...)
 	{
