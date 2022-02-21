@@ -21,7 +21,7 @@ int main()
 			ERROR_RETURN(EXIT_FAILURE) << " : There is no config file along path " << pathToConfig;
 		}
 
-		auto config = game::GetConfig(configFile);
+		auto config = game::GetConfigIni(configFile);
 
 		//Проверка корректности параметров конфигурации игры 
 		if (config.numberOfDigits < 1 || config.needCorrectNumbers < 1)
