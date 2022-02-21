@@ -2,18 +2,16 @@
 #include <fstream>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/ini_parser.hpp>
+#include <boost/property_tree/xml_parser.hpp>
 
 #include "game_config.h"
 
 namespace game
 {
 
-inline Configuration GetConfig(std::ifstream& configFile)
+inline Configuration GetConfigFromPtree(boost::property_tree::ptree& config)
 {
 	Configuration result;
-
-	boost::property_tree::ptree config;
-	read_ini(configFile, config);
 
 	result.numberOfAttempts = config.get<int>("Config.numberOfAttempts");
 	result.startRangeOfInitialValues = config.get<int>("Config.startRangeOfInitialValues");
@@ -22,6 +20,22 @@ inline Configuration GetConfig(std::ifstream& configFile)
 	result.needCorrectNumbers = config.get<int>("Config.needCorrectNumbers");
 
 	return result;
+}
+
+inline Configuration GetConfigIni(std::istream& configFile)
+{
+	boost::property_tree::ptree config;
+	read_ini(configFile, config);
+
+	return GetConfigFromPtree(config);
+}
+
+inline Configuration GetConfigXml(std::istream& configFile)
+{
+	boost::property_tree::ptree config;
+	read_xml(configFile, config);
+
+	return GetConfigFromPtree(config);
 }
 
 }
