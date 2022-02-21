@@ -12,8 +12,7 @@
 		if(__macro_i)\
 			return error_code;\
 		else\
-		std::cout << "\n" << __FILE__ << ":" << __LINE__ << " ERROR: function " << __FUNCTION__  
-
+			std::cout << "\n" << __FILE__ << ":" << __LINE__ << " ERROR: function " << __FUNCTION__
 
 
 //Коды результата работы функций 
@@ -29,17 +28,18 @@ enum resultCode
 
 /**
  * \brief - Заполнение вектора значениями из заданного диапазона,в случайном порядке
- * \tparam Iterator - Итератор на вектор
+ * \tparam Iterator тип итератора на вектор
  * \param dstBegin - Итератор на начало вектора 
  * \param dstEnd - Итератор на конец вектора
  * \param startRange - Начало диапазона исходных значений 
  * \param endRange - Конец диапазона исходных значений
  * \return resultCode - Код результата работы функции
- * \warning - функция не имеет смысла,если длина диапазона исходных значений <= 0
- * \warning - функция не имеет смысла,если длина диапазона исходных значений < длины вектора
+ * \remarks - функция не имеет смысла,если длина диапазона исходных значений <= 0
+ * \remarks - функция не имеет смысла,если длина диапазона исходных значений < длины вектора
  */
 template <typename Iterator>
-resultCode fillVectorUniqueValuesFromRangeAtRandom(Iterator dstBegin,Iterator dstEnd, int32_t startRange, int32_t endRange)
+resultCode fillVectorUniqueValuesFromRangeAtRandom(Iterator dstBegin, Iterator dstEnd, int32_t startRange,
+                                                   int32_t endRange)
 {
 	//Проверка на корректность границ диапазона исзодных значений 
 	if (startRange >= endRange)
@@ -78,7 +78,7 @@ resultCode fillVectorUniqueValuesFromRangeAtRandom(Iterator dstBegin,Iterator ds
 
 
 	std::generate_n(std::back_inserter(source), source.capacity(),
-							[i = startRange]() mutable { return i++; });
+	                [i = startRange]() mutable { return i++; });
 	std::shuffle(source.begin(), source.end(), std::mt19937(std::random_device()()));
 	std::copy_n(source.begin(), dstElementsCount, dstBegin);
 
@@ -101,8 +101,8 @@ resultCode fillVectorUniqueValuesFromRangeAtRandom(Iterator dstBegin,Iterator ds
  */
 template <typename Iterator>
 resultCode compareVectors(Iterator controlBegin, Iterator controlEnd,
-						  Iterator subjectBegin, Iterator subjectEnd,
-							int32_t& correct, int32_t& almostCorrect)
+                          Iterator subjectBegin, Iterator subjectEnd,
+                          int32_t& correct, int32_t& almostCorrect)
 {
 	if (std::distance(controlBegin, controlEnd) != std::distance(subjectBegin, subjectEnd))
 	{
@@ -120,7 +120,7 @@ resultCode compareVectors(Iterator controlBegin, Iterator controlEnd,
 		else
 		{
 			almostCorrect += std::any_of(subjectBegin, subjectEnd,
-					[controlIter](int i) { return i == *controlIter; });
+			                             [controlIter](int i) { return i == *controlIter; });
 		}
 	}
 
@@ -143,7 +143,7 @@ resultCode enterNumberIntoVector(Iterator dstBegin, Iterator dstEnd)
 	int32_t inputVal;
 	std::cin >> inputVal;
 
-	if(std::cin.fail())
+	if (std::cin.fail())
 	{
 		std::cin.clear();
 		std::cin.ignore(std::cin.rdbuf()->in_avail());
@@ -152,14 +152,14 @@ resultCode enterNumberIntoVector(Iterator dstBegin, Iterator dstEnd)
 
 	std::string enteredValues = std::to_string(inputVal);
 
-	if (enteredValues.length() != std::distance(dstBegin,dstEnd))
+	if (enteredValues.length() != std::distance(dstBegin, dstEnd))
 	{
 		std::cin.clear();
 		std::cin.ignore(std::cin.rdbuf()->in_avail());
 		ERROR_RETURN(resultCode::eInvalidUserInput) << " :The length of the entered value is incorrect ";
 	}
 
-	std::transform(enteredValues.begin(), enteredValues.end(), dstBegin, [](char ch) {return ch - '0'; });
+	std::transform(enteredValues.begin(), enteredValues.end(), dstBegin, [](char ch) { return ch - '0'; });
 
 	return resultCode::sOk;
 }
@@ -196,11 +196,13 @@ int main()
 		if ((config.startRangeOfInitialValues < 0 || config.startRangeOfInitialValues > 9)
 			|| (config.endRangeOfInitialValues < 0 || config.endRangeOfInitialValues > 9))
 		{
-			ERROR_RETURN(eIncorrectConfigurations) << " :The configuration of the range of initial values is set incorrectly ";
+			ERROR_RETURN(eIncorrectConfigurations) <<
+ " :The configuration of the range of initial values is set incorrectly ";
 		}
-		if(config.numberOfAttempts <= 0)
+		if (config.numberOfAttempts <= 0)
 		{
-			ERROR_RETURN(eIncorrectConfigurations) << " :The configuration of the number of attempts is not set correctly ";
+			ERROR_RETURN(eIncorrectConfigurations) <<
+ " :The configuration of the number of attempts is not set correctly ";
 		}
 
 		while (true)
@@ -209,7 +211,7 @@ int main()
 			std::vector<int32_t> userResponses(config.numberOfDigits);
 
 			if (fillVectorUniqueValuesFromRangeAtRandom(
-				decisions.begin(),decisions.end(),
+				decisions.begin(), decisions.end(),
 				config.startRangeOfInitialValues, config.endRangeOfInitialValues))
 			{
 				return EXIT_FAILURE;
@@ -234,13 +236,13 @@ int main()
 					continue;
 				}
 
-				if(compareVectors(decisions.begin(), decisions.end(),
-							userResponses.begin(),userResponses.end(),
-										correctNumbers, almostCorrectNumbers))
+				if (compareVectors(decisions.begin(), decisions.end(),
+				                   userResponses.begin(), userResponses.end(),
+				                   correctNumbers, almostCorrectNumbers))
 				{
 					return EXIT_FAILURE;
 				}
-				
+
 
 				std::cout << "\nCorrect numbers = " << correctNumbers << "; ";
 				std::cout << "Almost correct numbers = " << almostCorrectNumbers << ".\n";
