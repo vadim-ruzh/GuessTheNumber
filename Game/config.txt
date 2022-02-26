@@ -1,0 +1,5 @@
+		$(Config.numberOfAttempts) = 12
+		$(Config.startRangeOfInitialValues) = 0
+		$(Config.endRangeOfInitialValues) = 9
+		$(Config.numberOfDigits) = 4
+		$(Config.needCorrectNumbers) = 4
