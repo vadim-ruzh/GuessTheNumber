@@ -10,29 +10,35 @@
 
 namespace conf
 {
-	inline  ResultCode  GetConfigFromPtree(boost::property_tree::ptree& configPtree, Configuration& config)
+	/**
+	 * \brief Извлечение определенных переменных из configPtree и помещение их в dstConfig
+	 * \param configPtree ptree содержащий в себе конфигурацию  
+	 * \param dstConfig Структура конфигурации 
+	 * \return resultCode Код результата работы функции 
+	 */
+	inline  resultCode  GetConfigFromPtree(boost::property_tree::ptree& configPtree, Configuration& dstConfig)
 	{
-		Configuration localResult;
+		Configuration localConfig;
 
 		try
 		{
-			localResult.numberOfAttempts = configPtree.get<int>("Config.numberOfAttempts");
-			localResult.startRangeOfInitialValues = configPtree.get<int>("Config.startRangeOfInitialValues");
-			localResult.endRangeOfInitialValues = configPtree.get<int>("Config.endRangeOfInitialValues");
-			localResult.numberOfDigits = configPtree.get<int>("Config.numberOfDigits");
-			localResult.needCorrectNumbers = configPtree.get<int>("Config.needCorrectNumbers");
+			localConfig.numberOfAttempts = configPtree.get<int>("Config.numberOfAttempts");
+			localConfig.startRangeOfInitialValues = configPtree.get<int>("Config.startRangeOfInitialValues");
+			localConfig.endRangeOfInitialValues = configPtree.get<int>("Config.endRangeOfInitialValues");
+			localConfig.numberOfDigits = configPtree.get<int>("Config.numberOfDigits");
+			localConfig.needCorrectNumbers = configPtree.get<int>("Config.needCorrectNumbers");
 		}
 		catch (boost::exception const& e)
 		{
 			ERROR_RETURN(eBadConfiguration) << ":" << dynamic_cast<std::exception const&>(e).what();
 		}
 
-		config = localResult;
+		dstConfig = localConfig;
 
 		return sOk;
 	}
 
-	inline ResultCode GetConfigIni(std::istream& configFile,Configuration &configStructure)
+	inline resultCode GetConfigIni(std::istream& configFile,Configuration &configStructure)
 	{
 		boost::property_tree::ptree config;
 
@@ -50,7 +56,7 @@ namespace conf
 		return sOk;
 	}
 
-	inline ResultCode GetConfigXml(std::istream& configFile, Configuration& configStructure)
+	inline resultCode GetConfigXml(std::istream& configFile, Configuration& configStructure)
 	{
 		boost::property_tree::ptree config;
 
@@ -68,18 +74,22 @@ namespace conf
 		return sOk;
 	}
 
-
-	 
-	inline ResultCode ReadTenge(std::istream& StreamConfig, boost::property_tree::ptree& configPtree)
+	/**
+	 * @brief Чтение информации из входного потока в ptree,по заданному формату
+	 * @param inputStream Поток ввода 
+	 * @param  dstPtree Ptree назначения 
+	 * @return resultCode Код результата работы функции 
+	 */
+	inline resultCode ReadTenge(std::istream& inputStream, boost::property_tree::ptree& dstPtree)
 	{
-		if (!StreamConfig)
+		if (!inputStream)
 		{
 			ERROR_RETURN(eFileReadingError) << " Error reading from configuration file";
 		}
 
 		std::string FileInLine;
 		std::ostringstream tmpStr;
-		tmpStr << StreamConfig.rdbuf();
+		tmpStr << inputStream.rdbuf();
 		FileInLine = tmpStr.str();
 
 		boost::property_tree::ptree localPtree;
@@ -109,18 +119,24 @@ namespace conf
 			ERROR_RETURN(eEmptyConfiguration) << " The file does not contain a configuration";
 		}
 		
-		configPtree.swap(localPtree);
+		dstPtree.swap(localPtree);
 
 		return sOk;
 	}
 
-	inline ResultCode GetConfigFromTenge(std::istream& configFile, Configuration& configStructure)
+	/**
+	 * @brief Чтение  данных из входного потока и помещение в конфигурационную структуру 
+	 * @param  inputStream Поток ввода 
+	 * @param  dstConfig Cтруктура конфигурации 
+	 * @return resultCode Код результата работы функции 
+	 */
+	inline resultCode GetConfigFromTenge(std::istream& inputStream, Configuration& dstConfig)
 	{
-		boost::property_tree::ptree config;
+		boost::property_tree::ptree configPtree;
 
-		IF_RETURN(ReadTenge(configFile, config));
+		IF_RETURN(ReadTenge(inputStream, configPtree));
 		
-		IF_RETURN(GetConfigFromPtree(config, configStructure));
+		IF_RETURN(GetConfigFromPtree(configPtree, dstConfig));
 
 		return sOk;
 	}

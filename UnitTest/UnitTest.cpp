@@ -155,28 +155,34 @@ BOOST_AUTO_TEST_CASE(ReadingConfigFromeTengeFalse)
 		$(Config.numberOfDigits) = ads
 		$(Config.needCorrectNumbers) = "123aaw3"
 		)";
-
-	auto testConfig2 = "";
-
 	std::stringstream configFile1(testConfig1);
-	std::stringstream configFile2(testConfig2);
-
 	try
 	{
 		conf::Configuration cnfg1;
-		conf::Configuration cnfg2;
 		if(conf::GetConfigFromTenge(configFile1, cnfg1))
 		{
-			throw "Error";
+			throw 1;
 		}
-		if(conf::GetConfigFromTenge(configFile2, cnfg2))
-		{
-			throw "Error";
-		}
-
 		BOOST_TEST(false);
 	}
-	catch (const std::exception&)
+	catch (int a)
+	{
+		BOOST_TEST(true);
+	}
+
+
+	auto testConfig2 = "";
+	std::stringstream configFile2(testConfig2);
+	try
+	{
+		conf::Configuration cnfg2;
+		if (conf::GetConfigFromTenge(configFile2, cnfg2))
+		{
+			throw 1;
+		}
+		BOOST_TEST(false);
+	}
+	catch(int a)
 	{
 		BOOST_TEST(true);
 	}

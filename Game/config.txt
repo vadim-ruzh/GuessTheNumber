@@ -1,4 +1,4 @@
-		$(Config.numberOfAttempts) = 12
+		$(Config.numberOfAttempts) = 10
 		$(Config.startRangeOfInitialValues) = 0
 		$(Config.endRangeOfInitialValues) = 9
 		$(Config.numberOfDigits) = 4

@@ -1,6 +1,5 @@
 #pragma once
 
-
 namespace conf
 {
 	//Конфигурация игры - значения по умолчанию
@@ -21,7 +20,7 @@ namespace conf
 	};
 
 	
-	enum ResultCode
+	enum resultCode
 	{
 		sOk = 0,
 		eBadConfiguration,
